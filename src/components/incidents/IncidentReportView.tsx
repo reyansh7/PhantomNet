@@ -1,0 +1,188 @@
+import React, { useState } from 'react';
+import {
+  Download,
+  Copy,
+  Check,
+  ArrowRight,
+  AlertTriangle,
+  Server,
+} from 'lucide-react';
+import { IncidentReport } from '../../domain/types';
+
+interface IncidentReportViewProps {
+  report: IncidentReport;
+}
+
+export const IncidentReportView: React.FC<IncidentReportViewProps> = ({ report }) => {
+  const [copied, setCopied] = useState(false);
+
+  const downloadJson = () => {
+    const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(
+      JSON.stringify(report, null, 2)
+    )}`;
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute('href', jsonString);
+    downloadAnchor.setAttribute(
+      'download',
+      `phantomnet-incident-${report.sessionId}.json`
+    );
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+  };
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(JSON.stringify(report, null, 2));
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="bg-soc-card border border-soc-border rounded-xl p-5 space-y-6">
+      {/* Report Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-soc-border">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="px-2.5 py-1 rounded bg-soc-cyan/10 border border-soc-cyan/30 text-soc-cyan font-mono text-xs font-bold uppercase">
+              Forensic Incident Dossier
+            </span>
+            <span className="font-mono text-xs text-soc-textDim">
+              Ref: {report.sessionId}
+            </span>
+          </div>
+          <h2 className="text-lg font-bold text-white mt-1">
+            {report.classification}
+          </h2>
+          <p className="text-xs text-soc-textDim mt-0.5">
+            Compiled at {new Date(report.generatedAt).toLocaleString()} • Duration: {report.durationSeconds}s
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={copyToClipboard}
+            className="px-3 py-1.5 rounded-lg border border-soc-border bg-slate-900 hover:bg-slate-800 text-xs font-mono text-slate-300 flex items-center gap-1.5 transition-colors"
+          >
+            {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+            <span>{copied ? 'Copied' : 'Copy JSON'}</span>
+          </button>
+
+          <button
+            onClick={downloadJson}
+            className="px-3.5 py-1.5 rounded-lg bg-soc-cyan hover:bg-cyan-400 text-slate-950 font-mono text-xs font-bold flex items-center gap-1.5 transition-all shadow-[0_0_12px_rgba(6,182,212,0.25)]"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Export JSON Dossier</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Summary Narrative Banner */}
+      <div className="bg-slate-900/60 p-4 rounded-lg border border-soc-border">
+        <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-soc-textDim mb-1">
+          Executive Incident Narrative
+        </h4>
+        <p className="text-xs text-slate-200 leading-relaxed">
+          {report.summary}
+        </p>
+      </div>
+
+      {/* Traversal Trajectory Strip */}
+      <div className="space-y-2">
+        <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-soc-textDim">
+          Reconstructed Intrusion Trajectory ({report.attackTrajectory.length} hops)
+        </h4>
+        <div className="flex items-center gap-2 overflow-x-auto py-2 px-3 bg-slate-950 rounded-lg border border-soc-border no-scrollbar font-mono text-xs">
+          {report.attackTrajectory.map((node, i) => (
+            <React.Fragment key={i}>
+              <div className="px-2.5 py-1 rounded bg-slate-900 border border-slate-700 text-slate-200 flex items-center gap-1.5 shrink-0">
+                <Server className="w-3.5 h-3.5 text-soc-cyan" />
+                <span className="font-semibold">{node}</span>
+              </div>
+              {i < report.attackTrajectory.length - 1 && (
+                <ArrowRight className="w-3.5 h-3.5 text-red-500 shrink-0" />
+              )}
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+
+      {/* Breached Honeytokens Table */}
+      <div className="space-y-2">
+        <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-soc-textDim">
+          Compromised Canary Decoys ({report.triggeredDecoys.length})
+        </h4>
+
+        {report.triggeredDecoys.length === 0 ? (
+          <p className="text-xs text-soc-textDim italic bg-slate-900/40 p-3 rounded-lg border border-soc-border">
+            No honeytokens or decoy canaries breached during this session.
+          </p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs font-mono text-left border border-soc-border rounded-lg overflow-hidden">
+              <thead className="bg-slate-900 text-soc-textDim uppercase text-[10px]">
+                <tr>
+                  <th className="py-2.5 px-3">Asset Label</th>
+                  <th className="py-2.5 px-3">Canary Honeytoken ID</th>
+                  <th className="py-2.5 px-3">Host Node</th>
+                  <th className="py-2.5 px-3">Detection Time</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-soc-border bg-slate-950/60">
+                {report.triggeredDecoys.map((decoy) => (
+                  <tr key={decoy.assetId} className="hover:bg-slate-900/50">
+                    <td className="py-2 px-3 font-semibold text-slate-200">
+                      {decoy.assetLabel}
+                    </td>
+                    <td className="py-2 px-3 text-emerald-400 font-bold">
+                      {decoy.honeytokenId}
+                    </td>
+                    <td className="py-2 px-3 text-cyan-300">
+                      {decoy.nodeId}
+                    </td>
+                    <td className="py-2 px-3 text-soc-textDim">
+                      {new Date(decoy.touchedAt).toLocaleTimeString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Remediation Recommendations */}
+      <div className="space-y-2">
+        <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-soc-textDim">
+          Remediation & Containment Directives
+        </h4>
+        <div className="space-y-1.5">
+          {report.recommendations.map((rec, i) => (
+            <div
+              key={i}
+              className="p-2.5 rounded-lg bg-slate-900/70 border border-soc-border text-xs flex items-center gap-2 text-slate-300"
+            >
+              <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+              <span>{rec}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Raw JSON Preview */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-soc-textDim">
+            Forensic JSON Payload
+          </h4>
+          <span className="text-[10px] font-mono text-soc-textDim">
+            Machine-Readable SIEM Schema
+          </span>
+        </div>
+        <pre className="bg-slate-950 p-4 rounded-lg border border-soc-border text-slate-300 font-mono text-[11px] overflow-x-auto max-h-64 select-text">
+          {JSON.stringify(report, null, 2)}
+        </pre>
+      </div>
+    </div>
+  );
+};

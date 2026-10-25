@@ -1,0 +1,80 @@
+PHANTOMNET — MASTER BUILD PROMPT (3-HOUR HACKATHON)
+
+ROLE
+You are an expert senior full-stack developer and security-product engineer working inside an existing or new repository. Build a polished, deployable cybersecurity deception prototype, PHANTOMNET, in incremental, testable phases. Act autonomously: inspect the existing repository first, reuse working code, and do not rewrite functioning components unnecessarily. Do not ask for confirmation at every phase; implement, validate, document, and continue. Prioritize an end-to-end working demo over optional complexity.
+
+SOURCE PROBLEM STATEMENT — ORCA CODER, Track 03: Cybersecurity & Blockchain
+“Develop a cyber deception system that creates realistic decoy digital assets to detect intruders and trace their movement through a simulated network.”
+Description: “Build a simulated network containing decoy files, fake credentials, and monitored endpoints. When suspicious activity interacts with these decoys, the system should trigger alerts, reconstruct the movement, and generate an incident timeline.”
+Important: Blockchain is a category label, NOT a requirement; do not build blockchain functionality.
+
+SUCCESS CRITERIA
+A judge can open one publicly deployed HTTPS link, launch a scripted intruder session, navigate between 6 simulated network nodes, interact with fake files/credentials/monitored endpoints, and immediately see the *same underlying events* reflected in (1) high-signal alerts, (2) an animated attacker path on a network topology, (3) an ordered incident timeline, and (4) an exportable incident report. Clearly label everything simulated; do not claim live network detection or real external intruder tracking.
+
+HARD CONSTRAINTS
+- Total build+deploy+test budget: three hours. Ship an MVP first.
+- Frontend-only, single Vercel deployment: React + TypeScript + Vite + Tailwind CSS + @xyflow/react (React Flow) + lucide-react. Framer Motion and Recharts optional ONLY if they don't slow development.
+- No backend, separate hosting, API keys, auth, Supabase, blockchain, real SSH honeypot, external scanning, malware, packet capture, or real credential ingestion.
+- Store deterministic simulated sessions/events in memory and localStorage (per-browser demo data; no shared multiuser state). Use simple rule-based threat scores and explain the rules.
+- All assets, fake secrets, hostnames, IPs and files must be synthetic. Use reserved TEST-NET addresses such as 192.0.2.10 and 198.51.100.20 for labels. Never generate actual working credentials.
+- No real endpoint requests to arbitrary user-supplied hosts; no executable attacker commands. Attacker interactions are buttons that emit simulated events.
+- Prioritize desktop 1440x900, but support mobile responsibly. Accessibility: buttons, contrast, keyboard focus, readable type.
+
+PRODUCT & EXPERIENCE
+Visual identity: premium security operations center, dark navy/charcoal with crisp typography, cyan for network links, amber for warnings, red for critical events. Avoid overwhelming neon/glow. Responsive single-page product with concise navigation: Overview, Network, Attack Simulator, Incidents. A clear “Run Demo Attack” CTA must work instantly.
+
+SIX SIMULATED NODES
+Gateway 192.0.2.10; Web Server 192.0.2.20; Employee Workstation 192.0.2.30; Finance Server 192.0.2.40; Database 192.0.2.50; Decoy Vault 192.0.2.60. Model edges and node statuses (healthy, suspicious, triggered). Show decoy badges to defender only. In attacker view, disguise them as normal assets. No real networking occurs.
+
+DECOYS & INTERACTIONS
+- Files: payroll_Q3_2026.xlsx, customer_backup.sql, finance_forecast.pdf. Display fake file previews and harmless content. Each decoy has a unique honeytoken ID.
+- Credentials: synthetic admin token and database password placeholders (e.g. DEMO_ONLY_NOT_VALID), never real strings.
+- Monitored endpoints: fake /admin, /backup, /api/internal paths as simulated assets, not real application admin routes.
+- Attacker actions: scan host, browse directory, open file, view fake credential, attempt simulated login, attempt simulated lateral move. Use a finite-state session engine; reject impossible transitions and produce a clear message.
+
+EVENT-DRIVEN LOGIC (NON-NEGOTIABLE)
+Use typed domain entities and one central appendEvent() action. Every action emits an event with id, sessionId, timestamp, actor, sourceNodeId, targetNodeId, assetId (optional), type, severity, and explanation. Events are immutable once recorded. A deterministic reducer derives alerts, path edges, timeline, node states, KPIs and report from one authoritative session/event store. No unrelated hard-coded alert feed, fake live counter increments or disconnected widgets. Include a Reset Demo control that clears current simulated session state.
+
+SUGGESTED THREAT RULES
+- SCAN_HOST => informational, +5.
+- LOGIN_FAILED => low, +10.
+- SENSITIVE_FILE_OPENED (decoy) => high, +35, immediate alert.
+- HONEYTOKEN_VIEWED => high, +40, immediate alert.
+- FAKE_CREDENTIAL_USED => critical, +50, immediate alert.
+- LATERAL_MOVE_ATTEMPT => high, +25.
+Score = min(100, sum of scores for events in active session). Avoid scoring double counts from re-render. Show evidence per alert and explain why it fired. A normal browse is not automatically an attack.
+
+CORE DEMO SCENARIO
+Start an attacker session. Scan Gateway -> browse Web Server -> open decoy payroll_Q3_2026.xlsx on Finance Server -> view fake admin credential -> attempt a simulated move to Database. The defender dashboard must show: network path, critical/high alerts, score evolution, timestamped incident timeline, and report export. Also provide step-by-step manual mode and one-click scripted demo replay with explicit user action (no background timers required; speed controls optional).
+
+ARCHITECTURE
+Use the file ARCHITECTURE.md as the authoritative design reference. Suggested structure:
+src/app, src/components/{layout,network,simulation,incidents,ui}, src/data, src/domain/{types,simulation,rules,selectors}, src/hooks, src/lib, src/styles. Keep domain engine separate from React UI so unit tests can verify transitions.
+
+PHASES — IMPLEMENT IN ORDER
+Phase 0 (0–10 min): Inspect repository, scaffold only if needed, install deps, run app, create README and .env.example only if needed. Confirm npm run dev and npm run build. Initialize git if necessary.
+Phase 1 (10–45 min): Implement data model, network topology, dashboard shell, responsive navigation and seeded fake assets. Working visual network + machine details; build passes.
+Phase 2 (45–85 min): Implement event reducer, simulation store, attacker controls and deterministic event generation. Wire attacker clicks to dashboard; add state reset. Include unit tests for threat rules, event IDs and session transitions. Build passes.
+Phase 3 (85–120 min): Implement triggered alerts, node highlights, visited-edge path, ordered incident timeline and details. Ensure all are derived from event data. Demo flow end-to-end works.
+Phase 4 (120–140 min): JSON export (preferred), attractive incident report view, polish and usability; only add optional adaptive decoy rule if stable. Test export.
+Phase 5 (140–160 min): Deploy to Vercel (GitHub integration or `npx vercel --prod` if authenticated). Vite build command: `npm run build`; output directory: `dist`. Configure SPA routing with Vercel rewrite only if client-side routes actually need it. DO NOT claim deployment succeeded without a real deployment URL and verification.
+Phase 6 (160–180 min): Test the public URL in incognito, simulate full attack, refresh and check persistence, reset demo, export report, run npm run build and tests, document known limitations and rehearse a 90-second demonstration. Fix critical bugs only.
+
+IMPORTANT EXECUTION RULES
+1. At the end of each phase, run applicable build/tests and make sure the UI remains usable; do not leave the repo broken.
+2. Keep a short PHASE_STATUS.md with completed items, commands run, blockers, and next phase.
+3. If late, cut optional animations, charts, PDF generation, adaptive decoys, extra pages BEFORE cutting event-driven logic, decoys, alerts, timeline, and report.
+4. No placeholders posing as finished functionality. If an action is not implemented, disable it or label it.
+5. Don't fabricate deployment URLs, Git commits, verification or test outcomes. If Vercel CLI is unauthenticated, provide precise next steps and still deliver production-ready code.
+6. Secure React output with ordinary text rendering (no untrusted HTML injection). All content synthetic. No offensive cyber capabilities.
+7. Ensure no unexpected network calls; the deployed demo works with locally seeded data.
+8. Use visually polished mock data, but be honest that this is a simulation.
+
+DELIVERABLES
+- A fully functional repo with production build and responsive polished SOC UI.
+- README.md (setup, local run, Vercel deployment, limitations, 90-second judge demo).
+- ARCHITECTURE.md, ROADMAP.md, PHASE_STATUS.md.
+- Deterministic test coverage for the simulation, scoring and report generation.
+- A genuine live Vercel URL only after deployment has been completed and verified.
+
+START NOW: First inspect the repo, summarize current status in PHASE_STATUS.md, and execute Phase 0. Then continue sequentially within the time budget, always protecting the working MVP.
